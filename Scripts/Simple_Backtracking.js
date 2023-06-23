@@ -272,5 +272,4 @@ function print_board(board) {
   print_board(initial_board);
 
 
-exports.final_board = final_board;
 
