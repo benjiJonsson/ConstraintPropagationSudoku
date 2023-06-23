@@ -3,4 +3,4 @@ Sudoku: Sudoku.js treates the problem as a Constraint Satsifaction Problem and u
 
 One backtracking algorithm to populate a Miracle Sudoku Puzzle, although this is still a work in progress. 
 
-To run these JavaScript Algorithms, either run in Node.js from the terminal: npm 'file_name.js'. Or changne the link of the script 'src = Scripts/'file_name.js' to the algorithm you want to run and open with live server to view it on the web under developer tools.
+To run these JavaScript Algorithms, either run in Node.js from the terminal: npm `file_name.js`. Or changne the link of the script `src = Scripts/'file_name.js` to the algorithm you want to run and open with live server to view it on the web under developer tools.
