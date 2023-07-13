@@ -4,6 +4,9 @@
 
 Reference: Sudoku Creation and Grading. 
 https://www.sudokuwiki.org/Sudoku_Creation_and_Grading.pdf
+
+Reference: Backtracking
+https://www.techwithtim.net/tutorials/python-programming/sudoku-solver-backtracking/part-2
     
 The first step is to generate a Sudoku board and populate 
 it with numbers according to the laws of Sudoku: A filled 
@@ -14,7 +17,6 @@ The secound step is to solve the puzzle backwards to ensure
 only one soltuion exsists. 
 */
 
-
 // Generate Fully Populated Sudoku Board
 // ---------------------------------------------------------
 
@@ -24,13 +26,14 @@ var generate_sudoku = function(){
 
     // Create empty board 
     const board = create_empty_board();
-
     search(board);
     return board;
 }
 
 var create_empty_board = function(){
-
+    /* Create 2D Array: 9x9 Arrays with 
+    values of 0
+    */
     const board = [];
     for(let i = 0; i < 9; i++){
         board[i] = [];
@@ -48,11 +51,10 @@ var search = function(board){
     encountered. If a contradiction is encountered, the function 
     backtracks and removes the previous number choice to try another.
 
-        Finds next '0' cell -> tries to place valid number in cell. If
+    Finds next '0' cell -> tries to place valid number in cell. If
     successful -> move to next cell. If contradiction -> undo 
     previous choice and try another.
     */
-
 
     // Return `true` when valid solution is found: no empty cells
     const empty_cell = find_empty_cell(board);
@@ -63,8 +65,7 @@ var search = function(board){
     // Sets the row and column equal to posiiton of empty cell
     const [row, col] = empty_cell;
 
-    // Shuffled array -> each number to be tested is chosen at
-    // random. Makes each puzzle unique and random 
+    // Shuffled array -> each tested number is chosen at random. 
     const shuffled_nums = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
     // Loops through each number in 'random order'
@@ -72,14 +73,15 @@ var search = function(board){
 
         // If valid num, assigns it to to empty cell coordinates
         if (all_different(board, row, col, num)){
-        board[row][col] = num;
+            board[row][col] = num;
 
-            // The code calls the `search' function recursively 
-            // with the updated board. If true => valid solution. 
+            // The fucntion now recursively calls itself with the  
+            // updated board to fill in next empty cell.
             if (search(board)) {
                 return true;
             }
-            // If false, undo choice
+            // If false, current number has led to invalid solution. 
+            // Undo choice, and tries next number in array. 
             board[row][col] = 0;
         }
     }
@@ -87,10 +89,9 @@ var search = function(board){
     return false; 
 }
 
-
 var find_empty_cell = function(board){
     /* Iterates through board to find next empty cell. When found
-    returns cells coordinates 
+    returns cells coordinates.
     */
     for(let i = 0; i < 9; i++){
         for(let j = 0; j < 9; j++){
@@ -150,26 +151,40 @@ var printBoard = function(board) {
 
 // Solve Sudoku Board
 // -----------------------------------------------------
-// Reference: https://www.sudokuwiki.org/Sudoku_Creation_and_Grading.pdf
-// Ensuring symmetry => remove numbers that are diagonally opposite
-// [2;2] & [6;6]. Need to minus 8 form chosen cell row & col. 
 
 var solve_sudoku = function (board){
+    /* Function to get starting board i.e. board the players will play. 
+    Remove two numbers at each step and check that only one valid solution 
+    exists. 
 
+    Reference: https://www.sudokuwiki.org/Sudoku_Creation_and_Grading.pdf
+    Ensuring symmetry => remove numbers that are diagonally opposite
+    [2;2] & [6;6]. Need to minus 8 form chosen cell row & col. 
+    */
+
+    //Gets positon of every cell on the board. 
     const cells = all_sudoku_cells()
 
     for(let [row, col] of cells){
         if(board[row][col] != 0){
             
+            // Set diagonally opposite cell postion 
             const diagonal_row = 8 - row
             const diagonal_col = 8 - col
 
+            //Store the vlaue incase we need to backtrack and reset it 
             const cell_value = board[row][col];
             const diagonal_cell_value = board[diagonal_row][diagonal_col];
+
+            //Set chosen cell and diagonally opposite cell equal to zero
             board[row][col] = 0;
             board[diagonal_row][diagonal_col] = 0;
 
+            //Check how many solutions were found
             const solution_number = count_solutions(board);
+
+            // If more than one solution is found reset the cell numbers 
+            // This will also ensure a minimum of 17 cells 
             if (solution_number != 1){
                 board[row][col] = cell_value;
                 board[diagonal_row][diagonal_col] = diagonal_cell_value;
@@ -181,22 +196,25 @@ var solve_sudoku = function (board){
 }
 
 var all_sudoku_cells = function(){
+    /* Function to get position of all cells on the board.
+    */
 
     // First get every cell position on Sudoku Board
     const cells = [];
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
-        //let row = i
-        //let col = j
         cells.push([i,j]);
       }
     }
     shuffle(cells);
-    //console.log(cells);
     return cells;
 }
 
 var count_solutions = function(board){
+    /* Function to store number of differents 
+    solutions. 
+    */
+
     // Create a clone to avoid modifying the original board
     const cloned_board = JSON.parse(JSON.stringify(board));
     const solution_count = count_solutions_helper(cloned_board);
@@ -204,11 +222,16 @@ var count_solutions = function(board){
 }
 
 var count_solutions_helper = function(board){
+    /* Function to see if only one solution occures every time a number is 
+    removed. Logic: after each number is removed try fill in the board same way 
+    as `search` function and count how many solutions are found. 
+    */
+
     const empty_cell = find_empty_cell(board);
     if (!empty_cell) {
       return 1; // Found a solution
     }
-    //console.log(empty_cell);
+
     const [row, col] = empty_cell
     let count = 0; 
   
@@ -218,29 +241,32 @@ var count_solutions_helper = function(board){
       if (all_different(board, row, col, num)) {
         board[row][col] = num;
   
+        // Recursively call itself and everytime ther are no more empty cells
+        // (solution is found), it adds that value to the count variable. 
         count += count_solutions_helper(board);
+        //console.log(count);
   
         if (count > 1) {
           return count; // More than one solution found, no need to continue searching
         }
   
-        board[row][col] = 0; // Undo the choice and try another number
+        // If count = 1, only one soltuon is found, the funciton undoes previous choice
+        // and tries to find another solution
+        board[row][col] = 0;
       }
     }
   
     return count;
 }
-  
-// Calling the constructor function. 
-const populated_board = generate_sudoku();
-console.log("Final Board");
-printBoard(populated_board);
 
-
-
+// Calling the Constructore functions  
 const initial_board = generate_sudoku();
 const final_board = JSON.parse(JSON.stringify(initial_board));
 solve_sudoku(final_board);
+
+// Initial board is board user would play from 
+// Final board is fully generated board
+
 console.log("Initial Board:");
 console.log(initial_board);
 console.log("\nFinal Board:");
@@ -251,7 +277,7 @@ function print_board(board) {
       if (i % 3 === 0 && i !== 0) {
         console.log("- - - - - - - - - - - -");
       }
-  
+    
       let rowString = "";
       for (let j = 0; j < board[0].length; j++) {
         if (j % 3 === 0 && j !== 0) {
@@ -265,11 +291,12 @@ function print_board(board) {
       }
       console.log(rowString);
     }
-  }
-  
-  print_board(final_board);
-  console.log("_______________________");
-  print_board(initial_board);
+}
 
+console.log("Initial Board:");
+print_board(final_board);
+console.log("_______________________");
+console.log("\nFinal Board:");
+print_board(initial_board);
 
 
